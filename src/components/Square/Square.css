@@ -1,0 +1,18 @@
+.square {
+    width: 30px;
+    height: 30px;
+    padding: 10px;
+}
+
+.isPossible-square {
+    background-color: yellow;
+}
+
+
+.black-square {
+    background-color: #63462D;
+}
+
+.red-square {
+    background-color: #B07C4F;
+}

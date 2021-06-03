@@ -1,0 +1,20 @@
+.piece {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    margin: auto;
+    z-index: 1000;
+}
+
+.piece:hover {
+    border: 2px solid snow;
+    cursor: pointer;
+}
+
+.red-piece {
+    background-color: red;
+}
+
+.black-piece {
+    background-color: black;
+}
