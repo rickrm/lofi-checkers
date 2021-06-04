@@ -35,7 +35,7 @@ const getCaptureMoves = (row, col, boardObj, isEnemy=false) => {
   const rowIncrementor = isEnemy ? 1 : -1;
   const enemy = isEnemy ? "W" : "B";
   let moves = [];
-  console.log({ boardObj});
+
   // Check left side and recursively call left
   if (
     boardObj[currentRowLeft + rowIncrementor] &&
@@ -169,7 +169,6 @@ const findPossibleMoves = (selectedRow, selectedCol, boardObj, isEnemy=false) =>
     }
   } else {
     const captureMoves = getCaptureMoves(selectedRow, selectedCol, boardObj);
-    console.log({ captureMoves });
     if (captureMoves.length !== 0) {
       return captureMoves;
     }
@@ -368,7 +367,7 @@ const Game = () => {
   const getPossibleEnemyMoves = useCallback(
     (selectedRow, selectedCol) => {
       const boardObj = board;
-      return findPossibleMoves(boardObj);
+      return findPossibleMoves(selectedRow, selectedCol, boardObj, true);
     },
     [board]
   );
@@ -402,11 +401,9 @@ const Game = () => {
   const enemySelectMove = useCallback(
     enemySelectedPiece => {
       const enemySelectedPieceObj = enemySelectedPiece;
-      const possibleMoves = findPossibleMoves(
+      const possibleMoves = getPossibleEnemyMoves(
         enemySelectedPieceObj[0],
-        enemySelectedPieceObj[1],
-        true
-      );
+        enemySelectedPieceObj[1]);
 
       // Randomly select a move
       const range = possibleMoves.length;
@@ -452,7 +449,7 @@ const Game = () => {
       const winner = evaluateWinner(board);
       setWinner(winner);
     },
-    [board, currentPlayer]
+    [board, currentPlayer, getPossibleEnemyMoves]
   );
   // Get all possible moves given a selected row and column
   const getPossibleMoves = useCallback(
@@ -489,6 +486,7 @@ const Game = () => {
     selectMoveRow(position[0]);
     selectMoveCol(position[1]);
     // Uses the selected move and finds a path for the move
+    console.log("SELECTED PIECE TO MOVE: ", { selectedPieceRow, selectedPieceCol});
     const movePath = getMovePath(
       selectedPieceRow,
       selectedPieceCol,
@@ -520,11 +518,8 @@ const Game = () => {
     }
 
     // Set kill mode off if it was true
-    setIsKill(kill => {
-      if (kill) {
-        return !kill;
-      }
-    });
+    setIsKill(false);
+
 
     // Evaluate winner
     const winner = evaluateWinner(board);
@@ -536,9 +531,15 @@ const Game = () => {
 
   /* Side effects */
 
-  //  Side effect for initializing the board state
-  useEffect(() => {}, [board]);
+  useEffect(() => {
 
+  }, [selectedMoveRow, selec])
+  useEffect(() => {
+    if (!isKill) {
+      setKillPiece(JSON.stringify([]));
+      setPossibleMoves([]);
+    }
+  }, [isKill]);
   // Side effect for running the AI when players change
   useEffect(() => {
     const getAllPossibleMoves = () => {

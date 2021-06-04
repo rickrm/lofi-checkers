@@ -35,12 +35,12 @@ const Square = ({
       onEndDragPiece();
     };
     if (pieceRef.current) {
+      console.log("rem")
       const pieceDOM = pieceRef.current;
       pieceDOM.addEventListener("dragstart", handleDragStart);
       pieceDOM.addEventListener("dragend", handleDragEnd);
 
       return () => {
-        console.log("rem")
         pieceDOM.removeEventListener("dragstart", handleDragStart);
         pieceDOM.removeEventListener("dragend", handleDragEnd);
       };
