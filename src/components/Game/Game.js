@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useReducer } from "react";
+import React, { useEffect, useState, useReducer, useCallback } from "react";
 import Board from "../Board/Board";
 
 /* Helper functions */
@@ -262,10 +262,11 @@ const getEnemyMovePath = (row, col, targetRow, targetCol, boardObj) => {
   return moves;
 };
 
+
 // Reducer
+// PERFORM - Takes in an array of chained moves and performs each move
 const boardReducer = (prevBoardObj, action) => {
   switch (action.type) {
-    // Takes in an array of chained moves and performs each move
     case "PERFORM":
       // Setup
       const { prevRow, prevCol, arr, currentPlayer } = action;
@@ -318,6 +319,7 @@ const Game = () => {
   const [selectedMoveCol, selectMoveCol] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
   const [currentPlayer, setCurrentPlayer] = useState("W");
+  const [isEndGame, setIsEndGame] = useState(false);
 
   const [board, dispatchBoard] = useReducer(boardReducer, [
     [" ", " ", " ", " ", " ", " ", " ", " "],
@@ -329,18 +331,6 @@ const Game = () => {
     [" ", " ", "W", " ", " ", " ", "W", " "],
     [" ", " ", " ", " ", " ", " ", " ", " "],
   ]);
-  /* State effects */
-
-  //  State effect for initializing the board state
-  useEffect(() => {
-    console.log({ board });
-  }, [board]);
-
-  useEffect(() => {
-    if (currentPlayer === "B") {
-      runAIMoves();
-    }
-  });
 
   /* Gameplay functions */
   // Get possible moves for enemies
@@ -370,32 +360,6 @@ const Game = () => {
       }
     }
 
-    return moves;
-  };
-
-  // Get all possible moves given a selected row and column
-  const getPossibleMoves = (selectedRow, selectedCol) => {
-    const boardObj = board;
-    let moves = [];
-
-    // Checks for possible moves to capture enemies
-    // If so, only show moves to capture enemies
-    const captureMoves = getCaptureMoves(selectedRow, selectedCol, boardObj);
-    if (captureMoves.length !== 0) {
-      return captureMoves;
-    }
-
-    // Checks for vacant slots and add to array of available moves
-    if (boardObj[selectedRow - 1]) {
-      if (boardObj[selectedRow - 1][selectedCol - 1] === " ") {
-        moves.push([selectedRow - 1, selectedCol - 1]);
-      }
-
-      if (boardObj[selectedRow - 1][selectedCol + 1] === " ") {
-        moves.push([selectedRow - 1, selectedCol + 1]);
-      }
-    }
-    setPossibleMoves(moves);
     return moves;
   };
 
@@ -460,7 +424,7 @@ const Game = () => {
           prevRow: enemySelectedPieceObj[0],
           prevCol: enemySelectedPieceObj[1],
           arr: chainMoves,
-          currentPlayer
+          currentPlayer,
         });
       } else {
         console.log({ movePath });
@@ -470,14 +434,39 @@ const Game = () => {
           prevRow: enemySelectedPieceObj[0],
           prevCol: enemySelectedPieceObj[1],
           arr: movePath,
-          currentPlayer
+          currentPlayer,
         });
       }
     }
   };
+  // Get all possible moves given a selected row and column
+  const getPossibleMoves = useCallback(
+    (selectedRow, selectedCol) => {
+      const boardObj = board;
+      let moves = [];
 
+      // Checks for possible moves to capture enemies
+      // If so, only show moves to capture enemies
+      const captureMoves = getCaptureMoves(selectedRow, selectedCol, boardObj);
+      if (captureMoves.length !== 0) {
+        return captureMoves;
+      }
 
-  /* Helper functions */
+      // Checks for vacant slots and add to array of available moves
+      if (boardObj[selectedRow - 1]) {
+        if (boardObj[selectedRow - 1][selectedCol - 1] === " ") {
+          moves.push([selectedRow - 1, selectedCol - 1]);
+        }
+
+        if (boardObj[selectedRow - 1][selectedCol + 1] === " ") {
+          moves.push([selectedRow - 1, selectedCol + 1]);
+        }
+      }
+      setPossibleMoves(moves);
+      return moves;
+    },
+    [board]
+  );
 
   // Initialize checker pieces
   //   const initializePieces = board => {
@@ -522,11 +511,11 @@ const Game = () => {
   //     return board;
   //   };
 
-  /* Handlers */
   const runAIMoves = () => {
     // Selects an enemy piece and select a move
     const enemySelectedPieceObj = enemySelectPiece();
     if (!enemySelectedPieceObj) {
+      setIsEndGame(true);
       return;
     }
 
@@ -534,17 +523,20 @@ const Game = () => {
     setCurrentPlayer("W");
   };
 
-  const handleStartDragPiece = position => {
-    selectPieceRow(position[0]);
-    selectPieceCol(position[1]);
-    getPossibleMoves(position[0], position[1]);
-  };
+  /* Handlers */
+  const handleStartDragPiece = useCallback(position => {
+    const row = position[0];
+    const col = position[1];
+    selectPieceRow(row);
+    selectPieceCol(col);
+    getPossibleMoves(row, col)
+  }, [getPossibleMoves]);
 
-  const handleEndDragPiece = () => {
+  const handleEndDragPiece = useCallback(() => {
     setPossibleMoves([]);
-  };
+  }, []);
 
-  const handleMoveClick = position => {
+  const handleDrop = position => {
     selectMoveRow(position[0]);
     selectMoveCol(position[1]);
     // Uses the selected move and finds a path for the move
@@ -565,7 +557,7 @@ const Game = () => {
         prevRow: selectedPieceRow,
         prevCol: selectedPieceCol,
         arr: chainMoves,
-        currentPlayer
+        currentPlayer,
       });
     } else {
       // Perform the path of moves
@@ -574,12 +566,28 @@ const Game = () => {
         prevRow: selectedPieceRow,
         prevCol: selectedPieceCol,
         arr: movePath,
-        currentPlayer
+        currentPlayer,
       });
     }
     // Change players and start
     setCurrentPlayer("B");
   };
+
+  /* Side effects */
+
+  //  Side effect for initializing the board state
+  useEffect(() => {
+    console.log({ board });
+  }, [board]);
+
+  // Side effect for running the AI when players change
+  useEffect(() => {
+    if (currentPlayer === "B") {
+      runAIMoves();
+    } else {
+      
+    }
+  });
 
   return (
     <div>
@@ -588,8 +596,9 @@ const Game = () => {
         possibleMoves={possibleMoves}
         onStartDragPiece={handleStartDragPiece}
         onEndDragPiece={handleEndDragPiece}
-        onMoveClick={handleMoveClick}
+        onDrop={handleDrop}
       ></Board>
+      {isEndGame ? <h1>You Win!</h1> : null}
     </div>
   );
 };

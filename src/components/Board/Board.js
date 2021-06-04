@@ -2,7 +2,7 @@ import React from "react";
 import Square from "../Square/Square";
 import "./Board.css";
 
-const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onMoveClick }) => {
+const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onDrop }) => {
   const isPossibleMove = position => {
     for (let move of possibleMoves) {
       if (move[0] === position[0] && move[1] === position[1]) {
@@ -19,11 +19,12 @@ const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onMove
         squares.push(
           <Square
             key={[row, col]}
-            position={[row, col]}
+            row={row}
+            col={col}
             value={board[row][col]}
             onStartDragPiece={onStartDragPiece}
             onEndDragPiece={onEndDragPiece}
-            onMoveClick={onMoveClick}
+            onDrop={onDrop}
             isPossible={isPossibleMove([row, col])}
           ></Square>
         );

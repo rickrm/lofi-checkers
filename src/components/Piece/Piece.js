@@ -1,7 +1,7 @@
 import React, {forwardRef} from "react";
 import "./Piece.css";
 
-const Piece = forwardRef(({ type, position }, ref) => {
+const Piece = forwardRef(({ type }, ref) => {
   const pieceClass = "piece " + (type === "B" ? "black-piece" : "red-piece");
   return (
     <>
