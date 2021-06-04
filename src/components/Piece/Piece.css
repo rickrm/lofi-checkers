@@ -13,6 +13,11 @@
     transform: translate(0, 0);
 }
 
+.killer {
+    border: 2px solid yellow;
+    cursor: pointer;
+}
+
 .red-piece:hover {
     border: 2px solid snow;
     cursor: pointer;

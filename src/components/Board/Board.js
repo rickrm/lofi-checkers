@@ -2,7 +2,15 @@ import React from "react";
 import Square from "../Square/Square";
 import "./Board.css";
 
-const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onDrop }) => {
+const Board = ({
+  board,
+  onStartDragPiece,
+  onEndDragPiece,
+  possibleMoves,
+  onDrop,
+  killPiece,
+  isKill
+}) => {
   const isPossibleMove = position => {
     for (let move of possibleMoves) {
       if (move[0] === position[0] && move[1] === position[1]) {
@@ -12,13 +20,14 @@ const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onDrop
     return false;
   };
   const renderBoard = () => {
-    console.log({ board });
     const squares = [];
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
+
+        const move = [row, col];
         squares.push(
           <Square
-            key={[row, col]}
+            key={move}
             row={row}
             col={col}
             value={board[row][col]}
@@ -26,6 +35,8 @@ const Board = ({ board, onStartDragPiece, onEndDragPiece, possibleMoves,  onDrop
             onEndDragPiece={onEndDragPiece}
             onDrop={onDrop}
             isPossible={isPossibleMove([row, col])}
+            isKillPiece={killPiece[0] === row && killPiece[1] === col}
+            isKill={isKill}
           ></Square>
         );
       }

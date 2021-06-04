@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect } from "react";
 import Piece from "../Piece/Piece";
 import "./Square.css";
 
@@ -10,14 +10,19 @@ const Square = ({
   onEndDragPiece,
   isPossible,
   onDrop,
+  isKillPiece,
+  isKill
 }) => {
   const pieceRef = useRef(null);
   const possibleRef = useRef(null);
   const isRed = row % 2 === 0 ? col % 2 === 0 : col % 2 === 1;
-  const squareClass = "square " + (isRed ? "red-square" : "black-square");
+
+  //  TODO: fix squares
+  const squareClass = "square " + (isRed ? "dark-square" : "light-square");
 
   useEffect(() => {
     const handleDragStart = e => {
+      console.log("chosen")
       onStartDragPiece([row, col]);
       pieceRef.current.className = "piece red-piece chosen";
     };
@@ -35,11 +40,12 @@ const Square = ({
       pieceDOM.addEventListener("dragend", handleDragEnd);
 
       return () => {
+        console.log("rem")
         pieceDOM.removeEventListener("dragstart", handleDragStart);
         pieceDOM.removeEventListener("dragend", handleDragEnd);
       };
     }
-  }, [isPossible, onStartDragPiece, onEndDragPiece, row, col]);
+  }, [isPossible, onStartDragPiece, onEndDragPiece, row, col, isKillPiece]);
 
   useEffect(() => {
     const handleDragOver = e => {
@@ -76,7 +82,7 @@ const Square = ({
         <div ref={possibleRef} className="square isPossible-square"></div>
       ) : (
         <div className={squareClass}>
-          <Piece type={value} ref={pieceRef}></Piece>
+          <Piece isKill={isKill} isKillPiece={isKillPiece} type={value} ref={pieceRef}></Piece>
         </div>
       )}
     </>
