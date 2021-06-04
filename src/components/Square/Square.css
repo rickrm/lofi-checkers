@@ -8,6 +8,10 @@
     background-color: yellow;
 }
 
+.hovering {
+    background-color: rgb(145, 145, 47);
+}
+
 
 .black-square {
     background-color: #63462D;
@@ -15,4 +19,8 @@
 
 .red-square {
     background-color: #B07C4F;
+}
+
+.none {
+    display: none;
 }

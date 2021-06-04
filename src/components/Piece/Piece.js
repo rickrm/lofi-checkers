@@ -1,15 +1,25 @@
-import React from 'react'
-import './Piece.css'
+import React, {forwardRef} from "react";
+import "./Piece.css";
 
-const Piece = ({ type, onSelectPiece, position }) => {
+const Piece = forwardRef(({ type, position }, ref) => {
+  const pieceClass = "piece " + (type === "B" ? "black-piece" : "red-piece");
+  return (
+    <>
+      {type !== " " && (
+        <div
+        ref={type === "B" ? null : ref}
+          draggable="true"
+          onClick={e => {
+            e.stopPropagation();
+            if (type === "B") {
+                return;
+            }
+          }}
+          className={pieceClass}
+        ></div>
+      )}
+    </>
+  );
+});
 
-    const pieceClass = "piece " +  (type === "B" ? "black-piece" : "red-piece");
-    return (
-        <>
-
-        { type !== " " && <div onClick={(e) => {e.stopPropagation(); onSelectPiece(position);}} className={pieceClass}></div>}
-        </>
-    )
-}
-
-export default Piece
+export default Piece;
