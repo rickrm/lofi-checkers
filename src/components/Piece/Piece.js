@@ -1,5 +1,5 @@
 import React, { forwardRef } from "react";
-import { Player } from '../Game/Game';
+import { Player } from "../Game/Game";
 import "./Piece.css";
 const Piece = forwardRef(
   ({ piece, currentPlayer, isAttackTurn, isAttackPiece }, ref) => {
@@ -20,9 +20,11 @@ const Piece = forwardRef(
       currentPlayer === Player.main &&
       (isAttackPiece || !isAttackTurn);
 
+    const isPiece = piece !== " ";
+
     return (
       <>
-        {piece !== " " && (
+        {isPiece && (
           <div
             ref={piece === Player.ai ? null : ref}
             draggable={isDraggable}
