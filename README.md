@@ -17,9 +17,9 @@ Play modern checkers, but in somewhat low-fidelity!
 ![ezgif-7-187c0c017733](https://user-images.githubusercontent.com/59406513/120890217-0693c780-c5b6-11eb-8af4-1eb27abdd9f1.gif)
 
 - Game stats
-A.I. Pieces: the amount of A.I. pieces on the board
-Your Pieces: the amount of your pieces on the board
-Moves: The number of turns that involve both you and the A.I.
-Timer: the time of match
+- A.I. Pieces: the amount of A.I. pieces on the board
+- Your Pieces: the amount of your pieces on the board
+- Moves: The number of turns that involve both you and the A.I.
+- Timer: the length of the match so far
 
 ![ezgif-7-ba81e83bdbbf](https://user-images.githubusercontent.com/59406513/120890218-08f62180-c5b6-11eb-865d-a51d24c40c35.gif)
