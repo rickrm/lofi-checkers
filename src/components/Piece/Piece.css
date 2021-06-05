@@ -9,15 +9,19 @@
     background-color: red;
 }
 
-.chosen {
+.chosen-piece {
     transform: translate(0, 0);
 }
 
-.killer {
+.killer-piece {
     border: 2px solid yellow;
     cursor: pointer;
 }
 
+.hovering-piece {
+    border: 2px solid snow;
+    cursor: pointer;
+}
 
 .black-piece {
     background-color: black;

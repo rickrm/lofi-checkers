@@ -12,7 +12,7 @@ const Square = ({
   isPossible,
   onDrop,
   isKillPiece,
-  isKill
+  isKill,
 }) => {
   const pieceRef = useRef(null);
   const possibleRef = useRef(null);
@@ -23,22 +23,21 @@ const Square = ({
 
   useEffect(() => {
     const handleInteractStart = e => {
-      console.log("dragstart")
+      console.log("dragstart");
       onStartDragPiece([row, col]);
-      pieceRef.current.className = "piece red-piece chosen";
+      pieceRef.current.className = isKillPiece
+        ? "piece red-piece chosen-piece killer-piece"
+        : "piece red-piece chosen-piece hovering-piece";
     };
     const handleInteractEnd = () => {
-
-
       setTimeout(() => {
-        console.log("dragend")
         if (pieceRef.current) {
-          pieceRef.current.className = "piece red-piece";
+          pieceRef.current.className = isKillPiece ? "piece red-piece killer-piece" : "piece red-piece";
         }
       }, 0);
       onEndDragPiece();
     };
-    if (pieceRef.current && currentPlayer === "W") {
+    if (pieceRef.current && currentPlayer === "W" && (!isKill || isKillPiece)) {
       const pieceDOM = pieceRef.current;
       pieceDOM.addEventListener("dragstart", handleInteractStart);
       pieceDOM.addEventListener("mouseover", handleInteractStart);
@@ -50,15 +49,22 @@ const Square = ({
         pieceDOM.removeEventListener("mouseover", handleInteractStart);
         pieceDOM.removeEventListener("dragend", handleInteractEnd);
         pieceDOM.removeEventListener("mouseleave", handleInteractEnd);
-
       };
     }
-  }, [isPossible, onStartDragPiece, onEndDragPiece, row, col, isKillPiece, currentPlayer]);
+  }, [
+    isPossible,
+    onStartDragPiece,
+    onEndDragPiece,
+    row,
+    col,
+    isKillPiece,
+    currentPlayer,
+    isKill,
+  ]);
 
   useEffect(() => {
     const handleDragOver = e => {
       e.preventDefault();
-
     };
 
     const handleDragEnter = e => {
@@ -72,8 +78,7 @@ const Square = ({
 
     const onDragDrop = () => {
       onDrop([row, col]);
-    }
-
+    };
 
     if (possibleRef.current) {
       const possibleDOM = possibleRef.current;
@@ -97,7 +102,13 @@ const Square = ({
         <div ref={possibleRef} className="square isPossible-square"></div>
       ) : (
         <div className={squareClass}>
-          <Piece isKill={isKill} isKillPiece={isKillPiece} currentPlayer={currentPlayer} type={value} ref={pieceRef}></Piece>
+          <Piece
+            isKill={isKill}
+            isKillPiece={isKillPiece}
+            currentPlayer={currentPlayer}
+            type={value}
+            ref={pieceRef}
+          ></Piece>
         </div>
       )}
     </>

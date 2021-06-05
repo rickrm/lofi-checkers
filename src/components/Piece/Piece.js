@@ -4,7 +4,7 @@ const Piece = forwardRef(({ type, currentPlayer, isKill, isKillPiece }, ref) => 
   const getPieceClass = () => {
     if (isKillPiece) {
       return (
-        "piece " + (type === "B" ? "black-piece killer" : "red-piece killer")
+        "piece " + (type === "B" ? "black-piece killer-piece" : "red-piece killer-piece")
       );
     } else {
       return "piece " + (type === "B" ? "black-piece" : "red-piece");
