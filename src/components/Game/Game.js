@@ -695,36 +695,35 @@ const Game = () => {
         winner={winner}
       ></Board>
       {winner === Player.main ? (
-        <h1>🥳  You Win!</h1>
+        <h1>🥳 You Win!</h1>
       ) : winner === Player.ai ? (
-        <h1>😕  You Lose</h1>
+        <h1>😕 You Lose</h1>
       ) : null}
       {currentPlayer === Player.main ? (
         <h1>Your turn</h1>
-      ) : (
-        !winner ? <h1> 🤖 Loading AI turn</h1> : null
-      )}
+      ) : !winner ? (
+        <h1> 🤖 Loading AI turn</h1>
+      ) : null}
       <div className="game-stats">
         <h2>A.I. Pieces: {AIPieceCount}</h2>
         <h2>Your Pieces: {PlayerPieceCount}</h2>
         <h2>Moves: {playerMoveCount}</h2>
         <h2>Timer: {formatSeconds()}</h2>
       </div>
-      <div  className="instructions">
-      <h3>
-        ~~~~~~ Instructions ~~~~~~
-        </h3>
+      <div className="instructions">
+        <h3>~~~~~~ Instructions ~~~~~~</h3>
         <p>
-        1. Put your cursor over each piece to see the piece's possible moves
-        <br></br>
-        <br></br>
-        2. Click and drag to a yellow square 🟨  to move there
-        <br></br>
-        <br></br>
-        3. Have fun and try to beat the 🤖
-        <br></br>
-        <br></br>
-        4. For more info, check out <a href={"https://github.com/rickrm/tesla-checkers"}>my github</a>
+          1. Put your cursor over each piece to see the piece's possible moves
+          <br></br>
+          <br></br>
+          2. Click and drag to a yellow square 🟨 to move there
+          <br></br>
+          <br></br>
+          3. Have fun and try to beat the 🤖
+          <br></br>
+          <br></br>
+          4. For more info, check out{" "}
+          <a href={"https://github.com/rickrm/tesla-checkers"}>my github</a>
         </p>
       </div>
     </div>
