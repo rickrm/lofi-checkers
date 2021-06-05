@@ -8,6 +8,7 @@ Play modern checkers, but in somewhat low-fidelity!
 ## Demos
 
 - Chain jumping:
+- The A.I. and player can chain moves to attack multiple enemies
 
 ![ezgif-7-e58a797722c5](https://user-images.githubusercontent.com/59406513/120890094-8bcaac80-c5b5-11eb-8207-42e2ca8ba630.gif)
 
