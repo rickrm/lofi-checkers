@@ -1,0 +1,20 @@
+h3, h2, p {
+    font-family: 'VT323', monospace;
+    text-align: center;
+    color: #424642;
+    margin: 8px 0px;
+
+}
+
+p {
+    text-align: center;
+}
+
+.game-stats {
+    display: flex;
+    flex-direction: column;
+}
+
+.instructions {
+    margin-bottom: 16px;
+}

@@ -5,20 +5,20 @@
 }
 
 .isPossible-square {
-    background-color: yellow;
+    background-color: rgba(191, 191, 27, 0.803);
 }
 
 .square-hover {
-    background-color: rgb(145, 145, 47);
+    background-color: rgb(113, 113, 15);
 }
 
 
 .dark-square {
-    background-color: #63462D;
+    background-color: rgb(33, 32, 32);
 }
 
 .light-square {
-    background-color: #B07C4F;
+    background-color: #fff;
 }
 
 .none {

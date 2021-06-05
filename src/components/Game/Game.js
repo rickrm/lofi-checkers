@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useReducer, useCallback } from "react";
 import Board from "../Board/Board";
+import "./Game.css";
 
 /* Enumeration */
 const Player = { main: "R", ai: "B" };
@@ -207,7 +208,6 @@ const initializePieces = board => {
     if (index === 3 || index === 4) {
       return val;
     }
-
     // rows 0 - 2 must have the AI opponents pieces
     if (index <= 2) {
       // Place pieces on odd squares if the row is even
@@ -243,38 +243,43 @@ const initializePieces = board => {
         }
       }
     }
-
     return val;
   });
-
   return board;
 };
 
-// Checks for win conditions
-// Returns the winner string if theres a winner
-// Returns null if there is no winner
-const evaluateWinner = board => {
-  // Check if the AI/player has no more pieces left
-  let enemyLeft = 0;
+// Count the number of pieces for AI and player pieces
+const countPieces = board => {
+  // Counting the AI/player pieces on the board
+  let AILeft = 0;
   let playerLeft = 0;
   for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
     for (let colIndex = 0; colIndex < board[rowIndex].length; colIndex++) {
       const isPlayer = board[rowIndex][colIndex] === Player.main;
       const isEnemy = board[rowIndex][colIndex] === Player.ai;
+
       playerLeft = isPlayer ? playerLeft + 1 : playerLeft;
-      enemyLeft = isEnemy ? enemyLeft + 1 : enemyLeft;
+      AILeft = isEnemy ? AILeft + 1 : AILeft;
     }
   }
 
+  return { AILeft, playerLeft };
+};
+// Checks for win conditions
+// Returns the winner string if theres a winner
+// Returns null if there is no winner
+const evaluateWinner = board => {
+  // Check if the AI/player has no more pieces left
+  const { AILeft, playerLeft } = countPieces(board);
   // If empty then return the side that has pieces still left
   if (playerLeft === 0) {
     return Player.ai;
-  } else if (enemyLeft === 0) {
+  } else if (AILeft === 0) {
     return Player.main;
   }
 
   // Check if the AI/player has no more moves
-  let enemyMovesLeft = 0;
+  let AIMovesLeft = 0;
   let playerMovesLeft = 0;
   for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
     for (let colIndex = 0; colIndex < board[rowIndex].length; colIndex++) {
@@ -284,7 +289,7 @@ const evaluateWinner = board => {
       if (isPlayer) {
         playerMovesLeft += findPossibleMoves(rowIndex, colIndex, board).length;
       } else if (isEnemy) {
-        enemyMovesLeft += findPossibleMoves(
+        AIMovesLeft += findPossibleMoves(
           rowIndex,
           colIndex,
           board,
@@ -297,7 +302,7 @@ const evaluateWinner = board => {
   // If empty then return the side with turns left
   if (playerMovesLeft === 0) {
     return Player.ai;
-  } else if (enemyMovesLeft === 0) {
+  } else if (AIMovesLeft === 0) {
     return Player.main;
   }
 
@@ -390,12 +395,36 @@ const Game = () => {
     ])
   );
 
+  // Game Statistics
+  const numOfPieces = 12;
+  const [AIPieceCount, setAIPieceCount] = useState(numOfPieces);
+  const [PlayerPieceCount, setPlayerPieceCount] = useState(numOfPieces);
+  const [playerMoveCount, setPlayerMoveCount] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+
   /* Gameplay functions 
   Functions that run the logic and interactions of the game
 
   Note: The use of useCallback is to maintain 
   reference equality in dependencies in useEffect
   */
+
+  // Calculate time into hh:mm:ss
+  const formatSeconds = () => {
+    const hoursTime = Math.floor(seconds / 3600);
+    const minutesTime = Math.floor((seconds % 3600) / 60);
+    const secondsTime = (seconds % 3600) % 60;
+
+    if (hoursTime > 0) {
+      return `${hoursTime}h ${minutesTime}m ${secondsTime}s`;
+    } else {
+      if (minutesTime > 0) {
+        return `${minutesTime}m ${secondsTime}s`;
+      } else {
+        return `${secondsTime}s`;
+      }
+    }
+  };
 
   // Get possible moves for AI
   const getPossibleAIMoves = useCallback(
@@ -482,6 +511,11 @@ const Game = () => {
       // Evaluate winner
       const winner = evaluateWinner(board);
       setWinner(winner);
+
+      // Update Stats
+      const { AILeft, playerLeft } = countPieces(board);
+      setPlayerPieceCount(playerLeft);
+      setAIPieceCount(AILeft);
     },
     [board, currentPlayer, getPossibleAIMoves]
   );
@@ -489,11 +523,7 @@ const Game = () => {
   // Get all possible moves given a selected row and column
   const getPossibleMoves = useCallback(
     (selectedRow, selectedCol) => {
-      const possibleMoves = findPossibleMoves(
-        selectedRow,
-        selectedCol,
-        board,
-      );
+      const possibleMoves = findPossibleMoves(selectedRow, selectedCol, board);
       setPossibleMoves(possibleMoves);
     },
     [board]
@@ -561,11 +591,25 @@ const Game = () => {
     const winner = evaluateWinner(board);
     setWinner(winner);
 
+    // Update Stats
+    const { AILeft, playerLeft } = countPieces(board);
+    setPlayerPieceCount(playerLeft);
+    setAIPieceCount(AILeft);
+    setPlayerMoveCount(prevCount => 1 + prevCount);
+
     // Change players
     setCurrentPlayer(Player.ai);
   };
 
   /* Side effects */
+
+  // Set timer
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setSeconds(prevSecond => prevSecond + 1);
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [seconds]);
 
   // Reset possible moves when updating selected move
   useEffect(() => {
@@ -648,17 +692,41 @@ const Game = () => {
         onDrop={handleDrop}
         attackPieces={JSON.parse(attackPieces)}
         isAttackTurn={isAttackTurn}
+        winner={winner}
       ></Board>
       {winner === Player.main ? (
-        <h1>You Win!</h1>
+        <h1>🥳  You Win!</h1>
       ) : winner === Player.ai ? (
-        <h1>You Lose</h1>
+        <h1>😕  You Lose</h1>
       ) : null}
       {currentPlayer === Player.main ? (
         <h1>Your turn</h1>
       ) : (
-        <h1> 🤔 Loading AI turn</h1>
+        !winner ? <h1> 🤖 Loading AI turn</h1> : null
       )}
+      <div className="game-stats">
+        <h2>A.I. Pieces: {AIPieceCount}</h2>
+        <h2>Your Pieces: {PlayerPieceCount}</h2>
+        <h2>Moves: {playerMoveCount}</h2>
+        <h2>Timer: {formatSeconds()}</h2>
+      </div>
+      <div  className="instructions">
+      <h3>
+        ~~~~~~ Instructions ~~~~~~
+        </h3>
+        <p>
+        1. Put your cursor over each piece to see the piece's possible moves
+        <br></br>
+        <br></br>
+        2. Click and drag to a yellow square 🟨  to move there
+        <br></br>
+        <br></br>
+        3. Have fun and try to beat the 🤖
+        <br></br>
+        <br></br>
+        4. For more info, check out <a href={"https://github.com/rickrm/tesla-checkers"}>my github</a>
+        </p>
+      </div>
     </div>
   );
 };

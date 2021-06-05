@@ -42,7 +42,8 @@ const Board = ({
   possibleMoves,
   onDrop,
   attackPieces,
-  isAttackTurn
+  isAttackTurn,
+  winner
 }) => {
 
   // Maps each entry in board to a Square component
@@ -65,6 +66,7 @@ const Board = ({
             isPossible={isPossibleMove(possibleMoves, [row, col])}
             isAttackPiece={isPieceAttacking(attackPieces, [row, col])}
             isAttackTurn={isAttackTurn}
+            winner={winner}
           ></Square>
         );
       }

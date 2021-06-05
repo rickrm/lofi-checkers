@@ -14,6 +14,7 @@ const Square = ({
   onDrop,
   isAttackPiece,
   isAttackTurn,
+  winner,
 }) => {
   const pieceRef = useRef(null);
   const possibleRef = useRef(null);
@@ -48,7 +49,7 @@ const Square = ({
     };
 
     if (
-      pieceRef.current &&
+      !winner && pieceRef.current &&
       currentPlayer === Player.main &&
       (!isAttackTurn || isAttackPiece)
     ) {
@@ -74,6 +75,7 @@ const Square = ({
     isAttackPiece,
     currentPlayer,
     isAttackTurn,
+    winner
   ]);
 
   // Initializing event handling for dragging and dropping
@@ -87,7 +89,7 @@ const Square = ({
 
     const handleDragEnter = e => {
       e.preventDefault();
-      possibleRef.current.className += "hovering";
+      possibleRef.current.className += " square-hover";
     };
 
     const handleDragLeave = () => {
@@ -127,6 +129,7 @@ const Square = ({
             currentPlayer={currentPlayer}
             piece={piece}
             ref={pieceRef}
+            winner={winner}
           ></Piece>
         </div>
       )}

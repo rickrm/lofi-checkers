@@ -2,7 +2,7 @@ import React, { forwardRef } from "react";
 import { Player } from "../Game/Game";
 import "./Piece.css";
 const Piece = forwardRef(
-  ({ piece, currentPlayer, isAttackTurn, isAttackPiece }, ref) => {
+  ({ piece, currentPlayer, isAttackTurn, isAttackPiece, winner }, ref) => {
     const getPieceClass = () => {
       if (isAttackPiece) {
         return (
@@ -16,7 +16,7 @@ const Piece = forwardRef(
       }
     };
     const isDraggable =
-      piece !== Player.ai &&
+      !winner && piece !== Player.ai &&
       currentPlayer === Player.main &&
       (isAttackPiece || !isAttackTurn);
 
