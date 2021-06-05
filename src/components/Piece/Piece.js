@@ -1,33 +1,43 @@
 import React, { forwardRef } from "react";
+import { Player } from '../Game/Game';
 import "./Piece.css";
-const Piece = forwardRef(({ type, currentPlayer, isKill, isKillPiece }, ref) => {
-  const getPieceClass = () => {
-    if (isKillPiece) {
-      return (
-        "piece " + (type === "B" ? "black-piece killer-piece" : "red-piece killer-piece")
-      );
-    } else {
-      return "piece " + (type === "B" ? "black-piece" : "red-piece");
-    }
-  };
+const Piece = forwardRef(
+  ({ piece, currentPlayer, isAttackTurn, isAttackPiece }, ref) => {
+    const getPieceClass = () => {
+      if (isAttackPiece) {
+        return (
+          "piece " +
+          (piece === Player.ai
+            ? "black-piece killer-piece"
+            : "red-piece killer-piece")
+        );
+      } else {
+        return "piece " + (piece === Player.ai ? "black-piece" : "red-piece");
+      }
+    };
+    const isDraggable =
+      piece !== Player.ai &&
+      currentPlayer === Player.main &&
+      (isAttackPiece || !isAttackTurn);
 
-  return (
-    <>
-      {type !== " " && (
-        <div
-          ref={type === "B" ? null : ref}
-          draggable={type !== "B" && currentPlayer === "W" && (isKillPiece || !isKill)}
-          onClick={e => {
-            e.stopPropagation();
-            if (type === "B") {
-              return;
-            }
-          }}
-          className={getPieceClass()}
-        ></div>
-      )}
-    </>
-  );
-});
+    return (
+      <>
+        {piece !== " " && (
+          <div
+            ref={piece === Player.ai ? null : ref}
+            draggable={isDraggable}
+            onClick={e => {
+              e.stopPropagation();
+              if (piece === Player.ai) {
+                return;
+              }
+            }}
+            className={getPieceClass()}
+          ></div>
+        )}
+      </>
+    );
+  }
+);
 
 export default Piece;

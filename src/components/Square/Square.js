@@ -1,43 +1,57 @@
 import React, { useRef, useEffect } from "react";
 import Piece from "../Piece/Piece";
+import { Player } from '../Game/Game';
 import "./Square.css";
 
 const Square = ({
   row,
   col,
-  value,
+  piece,
   currentPlayer,
   onStartDragPiece,
   onEndDragPiece,
   isPossible,
   onDrop,
-  isKillPiece,
-  isKill,
+  isAttackPiece,
+  isAttackTurn,
 }) => {
   const pieceRef = useRef(null);
   const possibleRef = useRef(null);
-  const isRed = row % 2 === 0 ? col % 2 === 0 : col % 2 === 1;
 
-  //  TODO: fix squares
-  const squareClass = "square " + (isRed ? "dark-square" : "light-square");
+  // Styling the squares for a checkerboard
+  const isDarkSquare = row % 2 === 0 ? col % 2 === 1 : col % 2 === 0;
+  const squareClass =
+    "square " + (isDarkSquare ? "dark-square" : "light-square");
 
+  /* Side Effects */
+
+  // Initializing event handling for pieces
   useEffect(() => {
+    /* useEffect Handlers */
+
     const handleInteractStart = e => {
-      console.log("dragstart");
       onStartDragPiece([row, col]);
-      pieceRef.current.className = isKillPiece
+      pieceRef.current.className = isAttackPiece
         ? "piece red-piece chosen-piece killer-piece"
         : "piece red-piece chosen-piece hovering-piece";
     };
+
     const handleInteractEnd = () => {
+      onEndDragPiece();
       setTimeout(() => {
         if (pieceRef.current) {
-          pieceRef.current.className = isKillPiece ? "piece red-piece killer-piece" : "piece red-piece";
+          pieceRef.current.className = isAttackPiece
+            ? "piece red-piece killer-piece"
+            : "piece red-piece";
         }
       }, 0);
-      onEndDragPiece();
     };
-    if (pieceRef.current && currentPlayer === "W" && (!isKill || isKillPiece)) {
+
+    if (
+      pieceRef.current &&
+      currentPlayer === Player.main &&
+      (!isAttackTurn || isAttackPiece)
+    ) {
       const pieceDOM = pieceRef.current;
       pieceDOM.addEventListener("dragstart", handleInteractStart);
       pieceDOM.addEventListener("mouseover", handleInteractStart);
@@ -57,12 +71,16 @@ const Square = ({
     onEndDragPiece,
     row,
     col,
-    isKillPiece,
+    isAttackPiece,
     currentPlayer,
-    isKill,
+    isAttackTurn,
   ]);
 
+  // Initializing event handling for dragging and dropping
+  // pieces onto possible moves
   useEffect(() => {
+    /* useEffect Handlers */
+
     const handleDragOver = e => {
       e.preventDefault();
     };
@@ -80,6 +98,7 @@ const Square = ({
       onDrop([row, col]);
     };
 
+    // Adding listeners for drag and dropping pieces to possible moves
     if (possibleRef.current) {
       const possibleDOM = possibleRef.current;
       possibleDOM.addEventListener("dragover", handleDragOver);
@@ -103,10 +122,10 @@ const Square = ({
       ) : (
         <div className={squareClass}>
           <Piece
-            isKill={isKill}
-            isKillPiece={isKillPiece}
+            isAttackTurn={isAttackTurn}
+            isAttackPiece={isAttackPiece}
             currentPlayer={currentPlayer}
-            type={value}
+            piece={piece}
             ref={pieceRef}
           ></Piece>
         </div>

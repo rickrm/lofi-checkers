@@ -1,7 +1,16 @@
 import React, { useEffect, useState, useReducer, useCallback } from "react";
 import Board from "../Board/Board";
 
-/* Helper functions */
+/* Enumeration */
+const Player = { main: "R", ai: "B" };
+Object.freeze(Player);
+
+export { Player };
+
+/* Helper functions 
+Functions used to help calculate and determine moves
+*/
+
 // Returns a random integer between an inclusive minimum and exclusive maximum
 const getRandomNumber = (min, max) => {
   min = Math.ceil(min);
@@ -9,103 +18,104 @@ const getRandomNumber = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-// Checks if the target position is in the array of moves
-const isTargetInPath = (arr, targetRow, targetCol) => {
-  for (let move of arr) {
-    if (move[0] === targetRow && move[1] === targetCol) {
+// Returns true if the selected move is in the array of moves and false otherwise
+const isSelectedMoveInPath = (moves, selectedMoveRow, selectedMoveCol) => {
+  for (let move of moves) {
+    if (move[0] === selectedMoveRow && move[1] === selectedMoveCol) {
       return true;
     }
   }
   return false;
 };
 
-// Clean moves array
-const cleanMoves = arr => {
-  arr = arr.reverse();
-  arr = arr.slice(1);
-  return arr;
+// Returns an array of moves to execute to get to the selected move
+const cleanMoves = moves => {
+  moves = moves.reverse();
+  moves = moves.slice(1);
+  return moves;
 };
 
-// Get moves where the selected enemy/player piece must capture the enemy
-const getCaptureMoves = (row, col, boardObj, isEnemy = false) => {
-  // If both left and right side exists
-  // Check left side is a B and can be jumped over
-  let currentRowLeft = row;
-  let currentColLeft = col;
-  const rowIncrementor = isEnemy ? 1 : -1;
-  const enemy = isEnemy ? "W" : "B";
+// Get all the moves where the selected enemy/player piece can attack an enemy
+const getAttackMoves = (pieceRow, pieceCol, board, isAI = false) => {
+  // Check each side for enemies of the player/AI opponent
+
+  const rowIncrementor = isAI ? 1 : -1;
+  const enemy = isAI ? Player.main : Player.ai;
   let moves = [];
 
-  // Check left side and recursively call left
+  // Check the left path for enemies to attack
+  // and recursively call the function to explore other paths on the left
+  let currentRowLeft = pieceRow;
+  let currentColLeft = pieceCol;
   if (
-    boardObj[currentRowLeft + rowIncrementor] &&
-    boardObj[currentRowLeft + 2 * rowIncrementor] &&
-    boardObj[currentRowLeft + rowIncrementor][currentColLeft - 1] === enemy &&
-    boardObj[currentRowLeft + 2 * rowIncrementor][currentColLeft - 2] === " "
+    board[currentRowLeft + rowIncrementor] &&
+    board[currentRowLeft + 2 * rowIncrementor] &&
+    board[currentRowLeft + rowIncrementor][currentColLeft - 1] === enemy &&
+    board[currentRowLeft + 2 * rowIncrementor][currentColLeft - 2] === " "
   ) {
     currentRowLeft = currentRowLeft + 2 * rowIncrementor;
     currentColLeft = currentColLeft - 2;
     moves.push([currentRowLeft, currentColLeft]);
     moves = moves.concat(
-      getCaptureMoves(currentRowLeft, currentColLeft, boardObj, isEnemy)
+      getAttackMoves(currentRowLeft, currentColLeft, board, isAI)
     );
   }
 
-  // Check right side and recursively call right
-  let currentRowRight = row;
-  let currentColRight = col;
+  // Check the right path for enemies to attack
+  // and recursively call the function to explore other paths on the right
+  let currentRowRight = pieceRow;
+  let currentColRight = pieceCol;
   if (
-    boardObj[currentRowRight + rowIncrementor] &&
-    boardObj[currentRowRight + 2 * rowIncrementor] &&
-    boardObj[currentRowRight + rowIncrementor][currentColRight + 1] === enemy &&
-    boardObj[currentRowRight + 2 * rowIncrementor][currentColRight + 2] === " "
+    board[currentRowRight + rowIncrementor] &&
+    board[currentRowRight + 2 * rowIncrementor] &&
+    board[currentRowRight + rowIncrementor][currentColRight + 1] === enemy &&
+    board[currentRowRight + 2 * rowIncrementor][currentColRight + 2] === " "
   ) {
     currentRowRight = currentRowRight + 2 * rowIncrementor;
     currentColRight = currentColRight + 2;
     moves.push([currentRowRight, currentColRight]);
     moves = moves.concat(
-      getCaptureMoves(currentRowRight, currentColRight, boardObj, isEnemy)
+      getAttackMoves(currentRowRight, currentColRight, board, isAI)
     );
   }
   return moves;
 };
 
-// Get list of moves that makes a path to the selected move for the player/enemy
+// Get a list of moves to execute up to the target move for the player/AI opponent
 const getMovePath = (
-  row,
-  col,
-  targetRow,
-  targetCol,
-  boardObj,
-  isEnemy = false
+  pieceRow,
+  pieceCol,
+  selectedMoveRow,
+  selectedMoveCol,
+  board,
+  isAI = false
 ) => {
-  // If both left and right side exists
   let moves = [];
-  const rowIncrementor = isEnemy ? 1 : -1;
-  const enemy = isEnemy ? "W" : "B";
+  const rowIncrementor = isAI ? 1 : -1;
+  const enemy = isAI ? Player.main : Player.ai;
 
   // If the move does not capture any enemies
-  // Just return a path containing the move
-  if (targetRow - row === rowIncrementor) {
-    moves.push([targetRow, targetCol]);
+  // Just return a path containing the target move
+  if (selectedMoveRow - pieceRow === rowIncrementor) {
+    moves.push([selectedMoveRow, selectedMoveCol]);
     return moves;
   }
 
-  // If we found the value
-  if (row === targetRow && col === targetCol) {
-    moves.push([targetRow, targetCol]);
+  // If we found the selected move then end recursion
+  if (pieceRow === selectedMoveRow && pieceCol === selectedMoveCol) {
+    moves.push([selectedMoveRow, selectedMoveCol]);
     return moves;
   }
-  // Check left side is a B and can be jumped over
-  let currentRowLeft = row;
-  let currentColLeft = col;
 
-  // Check left side and recursively call left
+  // Check the left path for the selected move
+  // and recursively call the left side to explore other paths
+  let currentRowLeft = pieceRow;
+  let currentColLeft = pieceCol;
   if (
-    boardObj[currentRowLeft + rowIncrementor] &&
-    boardObj[currentRowLeft + 2 * rowIncrementor] &&
-    boardObj[currentRowLeft + rowIncrementor][currentColLeft - 1] === enemy &&
-    boardObj[currentRowLeft + 2 * rowIncrementor][currentColLeft - 2] === " "
+    board[currentRowLeft + rowIncrementor] &&
+    board[currentRowLeft + 2 * rowIncrementor] &&
+    board[currentRowLeft + rowIncrementor][currentColLeft - 1] === enemy &&
+    board[currentRowLeft + 2 * rowIncrementor][currentColLeft - 2] === " "
   ) {
     currentRowLeft = currentRowLeft + 2 * rowIncrementor;
     currentColLeft = currentColLeft - 2;
@@ -113,27 +123,28 @@ const getMovePath = (
       getMovePath(
         currentRowLeft,
         currentColLeft,
-        targetRow,
-        targetCol,
-        boardObj,
-        isEnemy
+        selectedMoveRow,
+        selectedMoveCol,
+        board,
+        isAI
       )
     );
 
-    if (isTargetInPath(moves, targetRow, targetCol)) {
-      moves.push([row, col]);
+    if (isSelectedMoveInPath(moves, selectedMoveRow, selectedMoveCol)) {
+      moves.push([pieceRow, pieceCol]);
       return moves;
     }
   }
 
-  // Check right side and recursively call right
-  let currentRowRight = row;
-  let currentColRight = col;
+  // Check the right path for the selected move
+  // and recursively call the right side to explore other paths
+  let currentRowRight = pieceRow;
+  let currentColRight = pieceCol;
   if (
-    boardObj[currentRowRight + rowIncrementor] &&
-    boardObj[currentRowRight + 2 * rowIncrementor] &&
-    boardObj[currentRowRight + rowIncrementor][currentColRight + 1] === enemy &&
-    boardObj[currentRowRight + 2 * rowIncrementor][currentColRight + 2] === " "
+    board[currentRowRight + rowIncrementor] &&
+    board[currentRowRight + 2 * rowIncrementor] &&
+    board[currentRowRight + rowIncrementor][currentColRight + 1] === enemy &&
+    board[currentRowRight + 2 * rowIncrementor][currentColRight + 2] === " "
   ) {
     currentRowRight = currentRowRight + 2 * rowIncrementor;
     currentColRight = currentColRight + 2;
@@ -141,14 +152,14 @@ const getMovePath = (
       getMovePath(
         currentRowRight,
         currentColRight,
-        targetRow,
-        targetCol,
-        boardObj,
-        isEnemy
+        selectedMoveRow,
+        selectedMoveCol,
+        board,
+        isAI
       )
     );
-    if (isTargetInPath(moves, targetRow, targetCol)) {
-      moves.push([row, col]);
+    if (isSelectedMoveInPath(moves, selectedMoveRow, selectedMoveCol)) {
+      moves.push([pieceRow, pieceCol]);
       return moves;
     }
   }
@@ -156,36 +167,27 @@ const getMovePath = (
   return moves;
 };
 
-// Find possible moves for player or the enemy
+// Finds all possible moves for the player/AI Opponent given a piece
 const findPossibleMoves = (
   selectedRow,
   selectedCol,
   boardObj,
-  isEnemy = false
+  isAI = false
 ) => {
   let moves = [];
-  const incrementor = isEnemy ? 1 : -1;
+  const incrementor = isAI ? 1 : -1;
 
   // Checks for possible moves to capture enemies
-  // If so, only show moves to capture enemies
-  if (isEnemy) {
-    const captureMoves = getCaptureMoves(
-      selectedRow,
-      selectedCol,
-      boardObj,
-      true
-    );
-    if (captureMoves.length !== 0) {
-      return captureMoves;
-    }
-  } else {
-    const captureMoves = getCaptureMoves(selectedRow, selectedCol, boardObj);
-    if (captureMoves.length !== 0) {
-      return captureMoves;
-    }
+  // If so, return the moves to capture enemies, since player/AI can only capture enemies
+  const attackMoves = isAI
+    ? getAttackMoves(selectedRow, selectedCol, boardObj, isAI)
+    : getAttackMoves(selectedRow, selectedCol, boardObj);
+
+  if (attackMoves.length !== 0) {
+    return attackMoves;
   }
 
-  // Checks for vacant slots and add to array of available moves
+  // Looking for single step moves
   if (boardObj[selectedRow + incrementor]) {
     if (boardObj[selectedRow + incrementor][selectedCol - 1] === " ") {
       moves.push([selectedRow + incrementor, selectedCol - 1]);
@@ -199,38 +201,44 @@ const findPossibleMoves = (
   return moves;
 };
 
-// Initialize checker pieces
+// Initializes checker pieces to the standard board
 const initializePieces = board => {
   board = board.map((val, index) => {
     if (index === 3 || index === 4) {
       return val;
     }
 
+    // rows 0 - 2 must have the AI opponents pieces
     if (index <= 2) {
+      // Place pieces on odd squares if the row is even
+      // and pieces on even squares if the row is odd
       if (index % 2 === 0) {
         for (let i = 0; i < val.length; i++) {
-          if (i % 2 === 0) {
-            val[i] = "B";
+          if (i % 2 === 1) {
+            val[i] = Player.ai;
           }
         }
       } else {
         for (let i = 0; i < val.length; i++) {
-          if (i % 2 === 1) {
-            val[i] = "B";
+          if (i % 2 === 0) {
+            val[i] = Player.ai;
           }
         }
       }
+      // rows 5 - 7 must have the player's pieces
     } else {
+      // Place pieces on odd squares if the row is even
+      // and pieces on even squares if the row is odd
       if (index % 2 === 0) {
         for (let i = 0; i < val.length; i++) {
-          if (i % 2 === 0) {
-            val[i] = "W";
+          if (i % 2 === 1) {
+            val[i] = Player.main;
           }
         }
       } else {
         for (let i = 0; i < val.length; i++) {
-          if (i % 2 === 1) {
-            val[i] = "W";
+          if (i % 2 === 0) {
+            val[i] = Player.main;
           }
         }
       }
@@ -242,36 +250,36 @@ const initializePieces = board => {
   return board;
 };
 
-// Checks for win
+// Checks for win conditions
 // Returns the winner string if theres a winner
-// Returns empty string if there is no winner
+// Returns null if there is no winner
 const evaluateWinner = board => {
+  // Check if the AI/player has no more pieces left
   let enemyLeft = 0;
   let playerLeft = 0;
-  // Check if the enemy or player no more pieces
   for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
     for (let colIndex = 0; colIndex < board[rowIndex].length; colIndex++) {
-      const isPlayer = board[rowIndex][colIndex] === "W";
-      const isEnemy = board[rowIndex][colIndex] === "B";
+      const isPlayer = board[rowIndex][colIndex] === Player.main;
+      const isEnemy = board[rowIndex][colIndex] === Player.ai;
       playerLeft = isPlayer ? playerLeft + 1 : playerLeft;
       enemyLeft = isEnemy ? enemyLeft + 1 : enemyLeft;
     }
   }
 
-  // If empty then return the winner
+  // If empty then return the side that has pieces still left
   if (playerLeft === 0) {
-    return "B";
+    return Player.ai;
   } else if (enemyLeft === 0) {
-    return "W";
+    return Player.main;
   }
 
-  // Check if the enemy or player no more moves
+  // Check if the AI/player has no more moves
   let enemyMovesLeft = 0;
   let playerMovesLeft = 0;
   for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
     for (let colIndex = 0; colIndex < board[rowIndex].length; colIndex++) {
-      const isPlayer = board[rowIndex][colIndex] === "W";
-      const isEnemy = board[rowIndex][colIndex] === "B";
+      const isPlayer = board[rowIndex][colIndex] === Player.main;
+      const isEnemy = board[rowIndex][colIndex] === Player.ai;
 
       if (isPlayer) {
         playerMovesLeft += findPossibleMoves(rowIndex, colIndex, board).length;
@@ -285,55 +293,60 @@ const evaluateWinner = board => {
       }
     }
   }
-  // If empty then return the winner
+
+  // If empty then return the side with turns left
   if (playerMovesLeft === 0) {
-    return "B";
+    return Player.ai;
   } else if (enemyMovesLeft === 0) {
-    return "W";
+    return Player.main;
   }
 
   return null;
 };
 
-// Reducer
-// PERFORM - Takes in an array of chained moves and performs each move
-const boardReducer = (prevBoardObj, action) => {
+// Reducer for managing the board's state
+const boardReducer = (prevBoard, action) => {
   switch (action.type) {
+    // Takes in an array of moves and performs each move
     case "PERFORM":
-      // Setup
       const { prevRow, prevCol, arr, currentPlayer } = action;
       let currRow = prevRow;
       let currCol = prevCol;
-      prevBoardObj[currRow][currCol] = " ";
-      // Loop over the array of moves  and perform each move
+      prevBoard[currRow][currCol] = " ";
+
+      // Loops over the array of moves and perform each move
       for (let move of arr) {
-        const row = move[0];
-        const col = move[1];
-        const isLeft = col - currCol === -2;
-        const isRight = col - currCol === 2;
-        const isEnemy = row - currRow > 0;
+        const nextRow = move[0];
+        const nextCol = move[1];
+        const isLeft = nextCol - currCol === -2;
+        const isRight = nextCol - currCol === 2;
+
+        // AI pieces move down the board array
+        // so their next row is always larger
+        const isAI = nextRow - currRow > 0;
 
         // Capture the enemy depending if the piece jumps to the left or right
         if (isLeft) {
-          if (isEnemy) {
-            prevBoardObj[currRow + 1][currCol - 1] = " ";
+          if (isAI) {
+            prevBoard[currRow + 1][currCol - 1] = " ";
           } else {
-            prevBoardObj[currRow - 1][currCol - 1] = " ";
+            prevBoard[currRow - 1][currCol - 1] = " ";
           }
         } else if (isRight) {
-          if (isEnemy) {
-            prevBoardObj[currRow + 1][currCol + 1] = " ";
+          if (isAI) {
+            prevBoard[currRow + 1][currCol + 1] = " ";
           } else {
-            prevBoardObj[currRow - 1][currCol + 1] = " ";
+            prevBoard[currRow - 1][currCol + 1] = " ";
           }
         }
 
-        currRow = row;
-        currCol = col;
+        currRow = nextRow;
+        currCol = nextCol;
       }
-      prevBoardObj[currRow][currCol] = currentPlayer;
-      return prevBoardObj;
+      prevBoard[currRow][currCol] = currentPlayer;
+      return prevBoard;
 
+    // Initializes the board
     case "INITIALIZE":
       const { board } = action;
       return board;
@@ -344,15 +357,23 @@ const boardReducer = (prevBoardObj, action) => {
 };
 
 const Game = () => {
-  /* States and variables */
-  // Updates the board
+  /* States and variables 
+
+  --- State Data ---
+  selectedPiece, selectedMove: [row,col]
+  possibleMoves, attackPieces: [[row, col]]
+  currentPlayer: Player.ai or Player.main
+  isAttackTurn: Boolean
+  winner: Player.ai or Player.main
+  board: [[String]]
+  */
 
   const [selectedPiece, selectPiece] = useState(null);
   const [selectedMove, selectMove] = useState(null);
   const [possibleMoves, setPossibleMoves] = useState([]);
-  const [currentPlayer, setCurrentPlayer] = useState("W");
-  const [killPiece, setKillPiece] = useState(JSON.stringify([]));
-  const [isKill, setIsKill] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState(Player.main);
+  const [attackPieces, setAttackPieces] = useState(JSON.stringify([]));
+  const [isAttackTurn, setAttackTurnStatus] = useState(false);
   const [winner, setWinner] = useState(null);
 
   const [board, dispatchBoard] = useReducer(
@@ -369,28 +390,30 @@ const Game = () => {
     ])
   );
 
-  /* Gameplay functions */
+  /* Gameplay functions 
+  Functions that run the logic and interactions of the game
 
-  // Get possible moves for enemies
-  const getPossibleEnemyMoves = useCallback(
+  Note: The use of useCallback is to maintain 
+  reference equality in dependencies in useEffect
+  */
+
+  // Get possible moves for AI
+  const getPossibleAIMoves = useCallback(
     (selectedRow, selectedCol) => {
-      const boardObj = board;
-      return findPossibleMoves(selectedRow, selectedCol, boardObj, true);
+      return findPossibleMoves(selectedRow, selectedCol, board, true);
     },
     [board]
   );
 
-  // Randomly select a piece for the enemy to move
-  // Return the selected piece
-  const enemySelectPiece = useCallback(() => {
-    // Collect all pieces with valid moves
-    const boardObj = board;
-    let availablePieces = [];
-    boardObj.forEach((row, rowIndex) => {
-      row.forEach((value, colIndex) => {
+  // Randomly select a piece for the AI to move
+  const AISelectPiece = useCallback(() => {
+    // Collect all AI pieces with valid moves
+    const availablePieces = [];
+    board.forEach((row, rowIndex) => {
+      row.forEach((piece, colIndex) => {
         if (
-          value === "B" &&
-          findPossibleMoves(rowIndex, colIndex, boardObj, true).length !== 0
+          piece === Player.ai &&
+          findPossibleMoves(rowIndex, colIndex, board, true).length !== 0
         ) {
           availablePieces.push([rowIndex, colIndex]);
         }
@@ -406,12 +429,14 @@ const Game = () => {
   }, [board]);
 
   // Select the move for the selected enemy piece
-  const enemySelectMove = useCallback(
-    enemySelectedPiece => {
-      const enemySelectedPieceObj = enemySelectedPiece;
-      const possibleMoves = getPossibleEnemyMoves(
-        enemySelectedPieceObj[0],
-        enemySelectedPieceObj[1]
+  const AISelectMove = useCallback(
+    AISelectedPiece => {
+      const AISelectedPieceRow = AISelectedPiece[0];
+      const AISelectedPieceCol = AISelectedPiece[1];
+      // Get all possible AI moves
+      const possibleMoves = getPossibleAIMoves(
+        AISelectedPieceRow,
+        AISelectedPieceCol
       );
 
       // Randomly select a move
@@ -419,35 +444,36 @@ const Game = () => {
       if (possibleMoves.length !== 0) {
         const randomIndex = getRandomNumber(0, range - 1);
         const pickedMove = possibleMoves[randomIndex];
-        selectMove([pickedMove[0], pickedMove[1]]);
+        const pickedMoveRow = pickedMove[0];
+        const pickedMoveCol = pickedMove[1];
+        selectMove([pickedMoveRow, pickedMoveCol]);
 
         // Uses the selected move and finds a path for the move
         const movePath = getMovePath(
-          enemySelectedPieceObj[0],
-          enemySelectedPieceObj[1],
-          pickedMove[0],
-          pickedMove[1],
+          AISelectedPieceRow,
+          AISelectedPieceCol,
+          pickedMoveRow,
+          pickedMoveCol,
           board,
           true
         );
 
-        // If there are chained moves
-        // Clean the array and perform the moves
+        // If there are moves before the selected move,
+        // clean the array, so it can perform the right moves in order
         if (movePath.length > 1) {
           const chainMoves = cleanMoves(movePath);
           dispatchBoard({
             type: "PERFORM",
-            prevRow: enemySelectedPieceObj[0],
-            prevCol: enemySelectedPieceObj[1],
+            prevRow: AISelectedPieceRow,
+            prevCol: AISelectedPieceCol,
             arr: chainMoves,
             currentPlayer,
           });
         } else {
-          // Perform the path of moves
           dispatchBoard({
             type: "PERFORM",
-            prevRow: enemySelectedPieceObj[0],
-            prevCol: enemySelectedPieceObj[1],
+            prevRow: AISelectedPieceRow,
+            prevCol: AISelectedPieceCol,
             arr: movePath,
             currentPlayer,
           });
@@ -457,16 +483,16 @@ const Game = () => {
       const winner = evaluateWinner(board);
       setWinner(winner);
     },
-    [board, currentPlayer, getPossibleEnemyMoves]
+    [board, currentPlayer, getPossibleAIMoves]
   );
+
   // Get all possible moves given a selected row and column
   const getPossibleMoves = useCallback(
     (selectedRow, selectedCol) => {
-      const boardObj = board;
       const possibleMoves = findPossibleMoves(
         selectedRow,
         selectedCol,
-        boardObj
+        board,
       );
       setPossibleMoves(possibleMoves);
     },
@@ -474,13 +500,14 @@ const Game = () => {
   );
 
   /* Handlers */
+
+  // Select piece and get possible moves on drag of a piece
   const handleStartDragPiece = useCallback(
-    position => {
-      console.log({ PICKED: position });
-      const row = position[0];
-      const col = position[1];
-      selectPiece([row, col]);
-      getPossibleMoves(row, col);
+    piece => {
+      const pieceRow = piece[0];
+      const pieceCol = piece[1];
+      selectPiece([pieceRow, pieceCol]);
+      getPossibleMoves(pieceRow, pieceCol);
     },
     [getPossibleMoves]
   );
@@ -489,113 +516,126 @@ const Game = () => {
     setPossibleMoves([]);
   };
 
-  const handleDrop = position => {
-    console.log("DROP:", { position });
-    const selectedRow = selectedPiece[0];
-    const selectedCol = selectedPiece[1];
-    selectMove([position[0], position[1]]);
+  // Perform the selected move when the player drops the piece
+  const handleDrop = move => {
+    const selectedPieceRow = selectedPiece[0];
+    const selectedPieceCol = selectedPiece[1];
+    const selectedMoveRow = move[0];
+    const selectedMoveCol = move[1];
+    selectMove([selectedMoveRow, selectedMoveCol]);
+
     // Uses the selected move and finds a path for the move
-    console.log("SELECTED PIECE TO MOVE: ", { selectedRow, selectedCol });
     const movePath = getMovePath(
-      selectedRow,
-      selectedCol,
-      position[0],
-      position[1],
+      selectedPieceRow,
+      selectedPieceCol,
+      selectedMoveRow,
+      selectedMoveCol,
       board
     );
 
-    // If there are chained moves
-    // Clean the array and perform the moves
+    // If there are moves before the selected move,
+    // clean the array, so it can perform the right moves in order
     if (movePath.length > 1) {
       const chainMoves = cleanMoves(movePath);
       dispatchBoard({
         type: "PERFORM",
-        prevRow: selectedRow,
-        prevCol: selectedCol,
+        prevRow: selectedPieceRow,
+        prevCol: selectedPieceCol,
         arr: chainMoves,
         currentPlayer,
       });
     } else if (movePath.length === 1) {
-      // Perform the path of moves
       dispatchBoard({
         type: "PERFORM",
-        prevRow: selectedRow,
-        prevCol: selectedCol,
+        prevRow: selectedPieceRow,
+        prevCol: selectedPieceCol,
         arr: movePath,
         currentPlayer,
       });
     }
 
     // Set kill mode off if it was true
-    setIsKill(false);
+    setAttackTurnStatus(false);
 
     // Evaluate winner
     const winner = evaluateWinner(board);
     setWinner(winner);
 
-    // Change players and start
-    setCurrentPlayer("B");
+    // Change players
+    setCurrentPlayer(Player.ai);
   };
 
   /* Side effects */
-useEffect(() => {
-  if (selectedMove) {
-    setPossibleMoves([]);
-  }
-}, [selectedMove])
+
+  // Reset possible moves when updating selected move
+  useEffect(() => {
+    if (selectedMove) {
+      setPossibleMoves([]);
+    }
+  }, [selectedMove]);
+
+  // Get possible moves when selecting a piece
   useEffect(() => {
     if (selectedPiece) {
       getPossibleMoves(selectedPiece[0], selectedPiece[1]);
     }
   }, [selectedPiece, getPossibleMoves]);
+
+  // Clear attack pieces when it is not an attack turn
   useEffect(() => {
-    if (!isKill) {
-      setKillPiece(JSON.stringify([]));
+    if (!isAttackTurn) {
+      setAttackPieces(JSON.stringify([]));
       setPossibleMoves([]);
     }
-  }, [isKill]);
+  }, [isAttackTurn]);
+
   // Side effect for running the AI when players change
   useEffect(() => {
-    const getAllPossibleMoves = () => {
+    /* useEffect Helpers */
+    const findAttackPieces = () => {
       // Collect all pieces with valid moves
+      const attackPiecesArr = [];
       for (let rowIndex = 0; rowIndex < board.length; rowIndex++) {
         for (let colIndex = 0; colIndex < board[rowIndex].length; colIndex++) {
+          // If the piece has attack moves then it is an attack piece
           if (
-            board[rowIndex][colIndex] === "W" &&
-            getCaptureMoves(rowIndex, colIndex, board).length > 0
+            board[rowIndex][colIndex] === Player.main &&
+            getAttackMoves(rowIndex, colIndex, board).length > 0
           ) {
-            setIsKill(true);
-            setKillPiece(JSON.stringify([rowIndex, colIndex]));
-            return;
+            attackPiecesArr.push([rowIndex, colIndex]);
           }
         }
       }
+
+      // Update attack piece states
+      if (attackPiecesArr.length !== 0) {
+        setAttackTurnStatus(true);
+        setAttackPieces(JSON.stringify(attackPiecesArr));
+      }
     };
+
     const runAIMoves = () => {
-      // Selects an enemy piece and select a move
-      const enemySelectedPieceObj = enemySelectPiece();
-      console.log({ enemySelectedPieceObj });
-      if (!enemySelectedPieceObj) {
-        setWinner("W");
+      // Selects a piece and select a move
+      const AISelectedPiece = AISelectPiece();
+      if (!AISelectedPiece) {
+        setWinner(Player.main);
         return;
       }
-      enemySelectMove(enemySelectedPieceObj);
-      setCurrentPlayer("W");
+      AISelectMove(AISelectedPiece);
+
+      setCurrentPlayer(Player.main);
     };
-    if (currentPlayer === "B") {
+
+    // If the current player is the AI run the turn process
+    // Otherwise, find attack pieces for the main players turn
+    if (currentPlayer === Player.ai) {
       setTimeout(() => {
         runAIMoves();
       }, 1500);
     } else {
-      getAllPossibleMoves();
+      findAttackPieces();
     }
-  }, [
-    currentPlayer,
-    enemySelectMove,
-    enemySelectPiece,
-    getPossibleMoves,
-    board
-  ]);
+  }, [currentPlayer, AISelectPiece, AISelectMove, getPossibleMoves, board]);
 
   return (
     <div>
@@ -606,15 +646,15 @@ useEffect(() => {
         onStartDragPiece={handleStartDragPiece}
         onEndDragPiece={handleEndDragPiece}
         onDrop={handleDrop}
-        killPiece={JSON.parse(killPiece)}
-        isKill={isKill}
+        attackPieces={JSON.parse(attackPieces)}
+        isAttackTurn={isAttackTurn}
       ></Board>
-      {winner === "W" ? (
+      {winner === Player.main ? (
         <h1>You Win!</h1>
-      ) : winner === "B" ? (
+      ) : winner === Player.ai ? (
         <h1>You Lose</h1>
       ) : null}
-      {currentPlayer === "W" ? (
+      {currentPlayer === Player.main ? (
         <h1>Your turn</h1>
       ) : (
         <h1> 🤔 Loading AI turn</h1>

@@ -2,6 +2,38 @@ import React from "react";
 import Square from "../Square/Square";
 import "./Board.css";
 
+// Checks if a piece is in attackPieces and
+// returns true if so and returns false otherwise
+const isPieceAttacking = (attackPieces, piece) => {
+  for (const attackPiece of attackPieces) {
+    const attackPieceRow = attackPiece[0];
+    const attackPieceCol = attackPiece[1];
+    
+    const pieceRow = piece[0];
+    const pieceCol = piece[1];
+
+    if (attackPieceRow === pieceRow && attackPieceCol === pieceCol) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Checks if a piece is in attackPieces and
+// returns true if so and returns false otherwise
+const isPossibleMove = (possibleMoves, square) => {
+  const squareRow = square[0];
+  const squareCol = square[1];
+
+  for (let move of possibleMoves) {
+    const moveRow = move[0];
+    const moveCol = move[1];
+    if (moveRow === squareRow && moveCol === squareCol) {
+      return true;
+    }
+  }
+  return false;
+};
 const Board = ({
   board,
   currentPlayer,
@@ -9,17 +41,11 @@ const Board = ({
   onEndDragPiece,
   possibleMoves,
   onDrop,
-  killPiece,
-  isKill
+  attackPieces,
+  isAttackTurn
 }) => {
-  const isPossibleMove = position => {
-    for (let move of possibleMoves) {
-      if (move[0] === position[0] && move[1] === position[1]) {
-        return true;
-      }
-    }
-    return false;
-  };
+
+  // Maps each entry in board to a Square component
   const renderBoard = () => {
     const squares = [];
     for (let row = 0; row < board.length; row++) {
@@ -32,13 +58,13 @@ const Board = ({
             row={row}
             col={col}
             currentPlayer={currentPlayer}
-            value={board[row][col]}
+            piece={board[row][col]}
             onStartDragPiece={onStartDragPiece}
             onEndDragPiece={onEndDragPiece}
             onDrop={onDrop}
-            isPossible={isPossibleMove([row, col])}
-            isKillPiece={killPiece[0] === row && killPiece[1] === col}
-            isKill={isKill}
+            isPossible={isPossibleMove(possibleMoves, [row, col])}
+            isAttackPiece={isPieceAttacking(attackPieces, [row, col])}
+            isAttackTurn={isAttackTurn}
           ></Square>
         );
       }
