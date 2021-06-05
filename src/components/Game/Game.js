@@ -309,6 +309,23 @@ const evaluateWinner = board => {
   return null;
 };
 
+  // Calculate time into hh:mm:ss
+  const formatSeconds = (seconds) => {
+    const hoursTime = Math.floor(seconds / 3600);
+    const minutesTime = Math.floor((seconds % 3600) / 60);
+    const secondsTime = (seconds % 3600) % 60;
+
+    if (hoursTime > 0) {
+      return `${hoursTime}h ${minutesTime}m ${secondsTime}s`;
+    } else {
+      if (minutesTime > 0) {
+        return `${minutesTime}m ${secondsTime}s`;
+      } else {
+        return `${secondsTime}s`;
+      }
+    }
+  };
+
 // Reducer for managing the board's state
 const boardReducer = (prevBoard, action) => {
   switch (action.type) {
@@ -371,6 +388,8 @@ const Game = () => {
   isAttackTurn: Boolean
   winner: Player.ai or Player.main
   board: [[String]]
+  AIPieceCount, PlayerPieceCount, playerMoveCount, seconds: Number
+  
   */
 
   const [selectedPiece, selectPiece] = useState(null);
@@ -409,22 +428,7 @@ const Game = () => {
   reference equality in dependencies in useEffect
   */
 
-  // Calculate time into hh:mm:ss
-  const formatSeconds = () => {
-    const hoursTime = Math.floor(seconds / 3600);
-    const minutesTime = Math.floor((seconds % 3600) / 60);
-    const secondsTime = (seconds % 3600) % 60;
 
-    if (hoursTime > 0) {
-      return `${hoursTime}h ${minutesTime}m ${secondsTime}s`;
-    } else {
-      if (minutesTime > 0) {
-        return `${minutesTime}m ${secondsTime}s`;
-      } else {
-        return `${secondsTime}s`;
-      }
-    }
-  };
 
   // Get possible moves for AI
   const getPossibleAIMoves = useCallback(
@@ -708,7 +712,7 @@ const Game = () => {
         <h2>A.I. Pieces: {AIPieceCount}</h2>
         <h2>Your Pieces: {PlayerPieceCount}</h2>
         <h2>Moves: {playerMoveCount}</h2>
-        <h2>Timer: {formatSeconds()}</h2>
+        <h2>Timer: {formatSeconds(seconds)}</h2>
       </div>
       <div className="instructions">
         <h3>~~~~~~ Instructions ~~~~~~</h3>
