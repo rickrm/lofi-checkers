@@ -18,10 +18,6 @@
     cursor: pointer;
 }
 
-.red-piece:hover {
-    border: 2px solid snow;
-    cursor: pointer;
-}
 
 .black-piece {
     background-color: black;

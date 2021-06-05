@@ -4,6 +4,7 @@ import "./Board.css";
 
 const Board = ({
   board,
+  currentPlayer,
   onStartDragPiece,
   onEndDragPiece,
   possibleMoves,
@@ -30,6 +31,7 @@ const Board = ({
             key={move}
             row={row}
             col={col}
+            currentPlayer={currentPlayer}
             value={board[row][col]}
             onStartDragPiece={onStartDragPiece}
             onEndDragPiece={onEndDragPiece}

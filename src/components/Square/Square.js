@@ -6,6 +6,7 @@ const Square = ({
   row,
   col,
   value,
+  currentPlayer,
   onStartDragPiece,
   onEndDragPiece,
   isPossible,
@@ -21,35 +22,43 @@ const Square = ({
   const squareClass = "square " + (isRed ? "dark-square" : "light-square");
 
   useEffect(() => {
-    const handleDragStart = e => {
-      console.log("chosen")
+    const handleInteractStart = e => {
+      console.log("dragstart")
       onStartDragPiece([row, col]);
       pieceRef.current.className = "piece red-piece chosen";
     };
-    const handleDragEnd = () => {
+    const handleInteractEnd = () => {
+
+
       setTimeout(() => {
+        console.log("dragend")
         if (pieceRef.current) {
           pieceRef.current.className = "piece red-piece";
         }
       }, 0);
       onEndDragPiece();
     };
-    if (pieceRef.current) {
-      console.log("rem")
+    if (pieceRef.current && currentPlayer === "W") {
       const pieceDOM = pieceRef.current;
-      pieceDOM.addEventListener("dragstart", handleDragStart);
-      pieceDOM.addEventListener("dragend", handleDragEnd);
+      pieceDOM.addEventListener("dragstart", handleInteractStart);
+      pieceDOM.addEventListener("mouseover", handleInteractStart);
+      pieceDOM.addEventListener("dragend", handleInteractEnd);
+      pieceDOM.addEventListener("mouseleave", handleInteractEnd);
 
       return () => {
-        pieceDOM.removeEventListener("dragstart", handleDragStart);
-        pieceDOM.removeEventListener("dragend", handleDragEnd);
+        pieceDOM.removeEventListener("dragstart", handleInteractStart);
+        pieceDOM.removeEventListener("mouseover", handleInteractStart);
+        pieceDOM.removeEventListener("dragend", handleInteractEnd);
+        pieceDOM.removeEventListener("mouseleave", handleInteractEnd);
+
       };
     }
-  }, [isPossible, onStartDragPiece, onEndDragPiece, row, col, isKillPiece]);
+  }, [isPossible, onStartDragPiece, onEndDragPiece, row, col, isKillPiece, currentPlayer]);
 
   useEffect(() => {
     const handleDragOver = e => {
       e.preventDefault();
+
     };
 
     const handleDragEnter = e => {
@@ -60,21 +69,27 @@ const Square = ({
     const handleDragLeave = () => {
       possibleRef.current.className = "square isPossible-square";
     };
+
+    const onDragDrop = () => {
+      onDrop([row, col]);
+    }
+
+
     if (possibleRef.current) {
       const possibleDOM = possibleRef.current;
       possibleDOM.addEventListener("dragover", handleDragOver);
       possibleDOM.addEventListener("dragenter", handleDragEnter);
       possibleDOM.addEventListener("dragleave", handleDragLeave);
-      possibleDOM.addEventListener("drop", () => onDrop([row, col]));
+      possibleDOM.addEventListener("drop", onDragDrop);
 
       return () => {
         possibleDOM.removeEventListener("dragover", handleDragOver);
         possibleDOM.removeEventListener("dragenter", handleDragEnter);
         possibleDOM.removeEventListener("dragleave", handleDragLeave);
-        possibleDOM.removeEventListener("drop", () => onDrop([row, col]));
+        possibleDOM.removeEventListener("drop", onDragDrop);
       };
     }
-  });
+  }, [isPossible, row, col]);
 
   return (
     <>
@@ -82,7 +97,7 @@ const Square = ({
         <div ref={possibleRef} className="square isPossible-square"></div>
       ) : (
         <div className={squareClass}>
-          <Piece isKill={isKill} isKillPiece={isKillPiece} type={value} ref={pieceRef}></Piece>
+          <Piece isKill={isKill} isKillPiece={isKillPiece} currentPlayer={currentPlayer} type={value} ref={pieceRef}></Piece>
         </div>
       )}
     </>

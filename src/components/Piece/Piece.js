@@ -1,6 +1,6 @@
 import React, { forwardRef } from "react";
 import "./Piece.css";
-const Piece = forwardRef(({ type, isKill, isKillPiece }, ref) => {
+const Piece = forwardRef(({ type, currentPlayer, isKill, isKillPiece }, ref) => {
   const getPieceClass = () => {
     if (isKillPiece) {
       return (
@@ -16,7 +16,7 @@ const Piece = forwardRef(({ type, isKill, isKillPiece }, ref) => {
       {type !== " " && (
         <div
           ref={type === "B" ? null : ref}
-          draggable={type !== "B" && (isKillPiece || !isKill)}
+          draggable={type !== "B" && currentPlayer === "W" && (isKillPiece || !isKill)}
           onClick={e => {
             e.stopPropagation();
             if (type === "B") {
