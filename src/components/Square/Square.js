@@ -94,7 +94,7 @@ const Square = ({
         possibleDOM.removeEventListener("drop", onDragDrop);
       };
     }
-  }, [isPossible, row, col]);
+  }, [isPossible, row, col, onDrop]);
 
   return (
     <>
